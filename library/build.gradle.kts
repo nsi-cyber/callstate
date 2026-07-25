@@ -50,13 +50,13 @@ mavenPublishing {
     pom {
         name = "CallState"
         description = "Kotlin Multiplatform library to observe whether the device is on an active call (Android and iOS)."
-        inceptionYear = "2024"
+        inceptionYear = "2026"
         url = "https://github.com/nsi-cyber/callstate/"
         licenses {
             license {
-                name = "XXX"
-                url = "YYY"
-                distribution = "ZZZ"
+                name = "The Apache License, Version 2.0"
+                url = "https://www.apache.org/licenses/LICENSE-2.0.txt"
+                distribution = "repo"
             }
         }
         developers {

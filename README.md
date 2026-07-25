@@ -68,4 +68,4 @@ Maven Central is configured via the Vanniktech plugin. Set POM license, develope
 
 ## License
 
-See [LICENSE](LICENSE).
+Licensed under the **Apache License, Version 2.0**. See [LICENSE](LICENSE) and [NOTICE](NOTICE).
