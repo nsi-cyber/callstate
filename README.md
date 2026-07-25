@@ -1,18 +1,28 @@
-# CallState (Kotlin Multiplatform)
+# callstate
 
-Observe whether the **device** is on an active voice call on **Android** and **iOS**. The library exposes a simple cold `Flow` that runs platform listeners **only while you collect**.
+Kotlin Multiplatform library that observes whether the **device** is on an active voice call (**Android** and **iOS**). Monitoring runs only while a collector is active on `callState()`.
 
-Published coordinates: `io.github.nsi-cyber:callstate`
+**Maven:** `io.github.nsi-cyber:callstate`  
+**Latest:** [1.0.0 on Maven Central](https://central.sonatype.com/artifact/io.github.nsi-cyber/callstate/1.0.0)
 
-## Quick start
+## Dependency
 
-**Common API**
+```kotlin
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    implementation("io.github.nsi-cyber:callstate:1.0.0")
+}
+```
+
+## Usage
 
 ```kotlin
 import io.github.nsicyber.callstate.CallState
 import io.github.nsicyber.callstate.createCallMonitor
 
-// In a coroutine scope (e.g. viewModelScope):
 createCallMonitor(platformContext).callState().collect { state ->
     when (state) {
         CallState.OnCall -> { /* ... */ }
@@ -21,64 +31,34 @@ createCallMonitor(platformContext).callState().collect { state ->
 }
 ```
 
-**Android** — pass a `Context` (prefer `applicationContext`):
+**Android** — pass `applicationContext` (or any `Context`). Request [`READ_PHONE_STATE`](library/src/commonMain/kotlin/io/github/nsicyber/callstate/CallMonitorPermissions.kt) at runtime for reliable telephony signals. The library merges the permission in its manifest; your app must still request it.
+
+**iOS** — no context required:
 
 ```kotlin
-val monitor = createCallMonitor(applicationContext)
+createCallMonitor(null).callState().collect { /* ... */ }
 ```
 
-Request `READ_PHONE_STATE` at runtime before expecting accurate results (see [CallMonitorPermissions.ANDROID_READ_PHONE_STATE](library/src/commonMain/kotlin/io/github/nsicyber/callstate/CallMonitorPermissions.kt)). The library manifest merges `READ_PHONE_STATE`; your app must still request it.
+Cancel the coroutine scope (or stop collecting) to unregister listeners.
 
-**iOS** — context is not required:
+## Limitations
 
-```kotlin
-val monitor = createCallMonitor(null)
-```
+Detection is **best effort**, especially for third-party VoIP.
 
-Cancel collection (or cancel the parent scope) to unregister listeners.
+| Platform | Works well | Often missed |
+|----------|------------|--------------|
+| **Android** | Cellular; many calls via `TelecomManager` (API 31+) | VoIP outside Telecom; no permission → always `NotOnCall` |
+| **iOS** | CallKit-visible calls (`CXCallObserver`) | Non–CallKit VoIP; limited Simulator testing |
 
-## What “on call” means (limitations)
-
-Detection is **best effort**, especially for third-party VoIP. Do not expect default-dialer accuracy.
-
-| Platform | Detects well | Often missed or flaky |
-|----------|----------------|------------------------|
-| **Android** | Cellular calls; many calls via `TelecomManager` (API 31+) | VoIP apps that bypass Telecom; OEM differences; no permission → always `NotOnCall` |
-| **iOS** | Calls visible to **CallKit** (`CXCallObserver`) | VoIP that never integrates CallKit; limited Simulator behavior |
-
-Signals on Android combine telephony off-hook, `TelecomManager.isInCall()` (API 31+), and audio modes `IN_CALL` / `IN_COMMUNICATION`.
-
-## Manual test checklist
-
-- Cellular incoming / outgoing call
-- Native Phone / FaceTime (iOS)
-- A CallKit-integrated VoIP app
-- A non-CallKit VoIP app (expect `NotOnCall` on iOS; variable on Android)
-
-## Build
+## Development
 
 ```bash
 ./gradlew :library:testAndroidHostTest
 ./gradlew :library:iosSimulatorArm64Test   # macOS + Xcode
 ```
 
-## Publishing
-
-Maven Central is configured via the Vanniktech plugin. GitHub Actions secrets:
-
-- `MAVEN_CENTRAL_USERNAME` / `MAVEN_CENTRAL_PASSWORD` — Central Portal user token
-- `SIGNING_KEY_ID` — last **8** characters of your GPG key id (same id you use with `gpg --export-secret-keys`)
-- `SIGNING_PASSWORD` — GPG passphrase
-- `GPG_KEY_CONTENTS` — **base64-encoded** armored private key (recommended for GitHub):
-
-  ```bash
-  gpg --armor --export-secret-keys YOUR_KEY_ID | base64 | pbcopy
-  ```
-
-  Paste the **single line** into the `GPG_KEY_CONTENTS` secret. (Raw multiline armored text often breaks in GitHub Secrets.)
-
-Publish runs on **GitHub Release** or manually via **Actions → Publish → Run workflow**.
+Releases are published to Maven Central via GitHub Actions (`.github/workflows/publish.yml`) on GitHub Release or manual workflow dispatch.
 
 ## License
 
-Licensed under the **Apache License, Version 2.0**. See [LICENSE](LICENSE) and [NOTICE](NOTICE).
+Apache License 2.0 — see [LICENSE](LICENSE) and [NOTICE](NOTICE).
