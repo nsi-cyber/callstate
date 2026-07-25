@@ -64,7 +64,14 @@ Signals on Android combine telephony off-hook, `TelecomManager.isInCall()` (API 
 
 ## Publishing
 
-Maven Central is configured via the Vanniktech plugin. Set POM license, developer, and signing secrets in `library/build.gradle.kts` before release. For `io.github.nsi-cyber`, verify repository ownership when registering with Central.
+Maven Central is configured via the Vanniktech plugin. GitHub Actions secrets:
+
+- `MAVEN_CENTRAL_USERNAME` / `MAVEN_CENTRAL_PASSWORD` — Central Portal user token
+- `SIGNING_KEY_ID` — last **8** characters of your GPG key id (same id you use with `gpg --export-secret-keys`)
+- `SIGNING_PASSWORD` — GPG passphrase
+- `GPG_KEY_CONTENTS` — full output of `gpg --armor --export-secret-keys YOUR_KEY_ID` (including `BEGIN`/`END` lines); CI normalizes it for Gradle
+
+Publish runs on **GitHub Release** or manually via **Actions → Publish → Run workflow**.
 
 ## License
 
