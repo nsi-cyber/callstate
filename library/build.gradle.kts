@@ -73,3 +73,16 @@ mavenPublishing {
         }
     }
 }
+
+signing {
+    val inMemoryKey = providers.gradleProperty("signingInMemoryKey")
+    if (inMemoryKey.isPresent) {
+        useInMemoryPgpKeys(
+            providers.gradleProperty("signingInMemoryKeyId").orNull,
+            inMemoryKey.get(),
+            providers.gradleProperty("signingInMemoryKeyPassword").orNull,
+        )
+    } else {
+        useGpgCmd()
+    }
+}
