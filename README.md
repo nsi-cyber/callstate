@@ -69,7 +69,13 @@ Maven Central is configured via the Vanniktech plugin. GitHub Actions secrets:
 - `MAVEN_CENTRAL_USERNAME` / `MAVEN_CENTRAL_PASSWORD` — Central Portal user token
 - `SIGNING_KEY_ID` — last **8** characters of your GPG key id (same id you use with `gpg --export-secret-keys`)
 - `SIGNING_PASSWORD` — GPG passphrase
-- `GPG_KEY_CONTENTS` — full output of `gpg --armor --export-secret-keys YOUR_KEY_ID` (with `BEGIN`/`END` lines). CI imports this into `gpg` and signs via `gpg` (not in-memory).
+- `GPG_KEY_CONTENTS` — **base64-encoded** armored private key (recommended for GitHub):
+
+  ```bash
+  gpg --armor --export-secret-keys YOUR_KEY_ID | base64 | pbcopy
+  ```
+
+  Paste the **single line** into the `GPG_KEY_CONTENTS` secret. (Raw multiline armored text often breaks in GitHub Secrets.)
 
 Publish runs on **GitHub Release** or manually via **Actions → Publish → Run workflow**.
 

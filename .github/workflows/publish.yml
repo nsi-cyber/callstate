@@ -21,11 +21,32 @@ jobs:
           GPG_KEY_CONTENTS: ${{ secrets.GPG_KEY_CONTENTS }}
           GPG_PASSPHRASE: ${{ secrets.SIGNING_PASSWORD }}
         run: |
-          if [ -z "$GPG_KEY_CONTENTS" ]; then
+          set -euo pipefail
+          if [ -z "${GPG_KEY_CONTENTS:-}" ]; then
             echo "GPG_KEY_CONTENTS secret is missing."
             exit 1
           fi
-          printf '%s' "$GPG_KEY_CONTENTS" | gpg --batch --pinentry-mode loopback --passphrase "$GPG_PASSPHRASE" --import
+
+          KEY_FILE="${RUNNER_TEMP}/signing.key"
+          RAW_FILE="${RUNNER_TEMP}/signing.raw"
+          printf '%s' "$GPG_KEY_CONTENTS" > "$RAW_FILE"
+
+          if grep -q 'BEGIN PGP PRIVATE KEY BLOCK' "$RAW_FILE"; then
+            echo "Detected armored PGP key in secret."
+            cp "$RAW_FILE" "$KEY_FILE"
+          else
+            echo "Trying base64 decode (recommended GitHub Secret format)."
+            base64 -D < "$RAW_FILE" > "$KEY_FILE"
+          fi
+
+          if ! gpg --batch --list-packets "$KEY_FILE" >/dev/null 2>&1; then
+            echo "::error::GPG_KEY_CONTENTS is not valid OpenPGP data."
+            echo "Update the secret using: gpg --armor --export-secret-keys KEY_ID | base64 | pbcopy"
+            echo "Then paste into GitHub secret GPG_KEY_CONTENTS (single line base64)."
+            exit 1
+          fi
+
+          gpg --batch --pinentry-mode loopback --passphrase "$GPG_PASSPHRASE" --import "$KEY_FILE"
           echo "Imported secret keys:"
           gpg --list-secret-keys --keyid-format LONG
       - name: Publish to MavenCentral
